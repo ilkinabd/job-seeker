@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "L53w1Rgf4krPQRLxHH8p3Euj5zmFxDdoZwoms+l44SM=",
+  "Source": "JobSeekerApi",
+  "BasePath": "_content/JobSeekerApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
