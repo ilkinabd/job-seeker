@@ -1,14 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using JobSeekerApi.Models;
-using JobSeekerApi.Repositories;
 using JobSeekerApi.Contracts;
-
+using JobSeekerApi.Services;
+using Microsoft.AspNetCore.Authorization;
 namespace JobSeekerApi.Controllers
 {
     [Route("api/[controller]")]
@@ -16,14 +10,15 @@ namespace JobSeekerApi.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserRepository _userRepo;
-
-        public UsersController(IUserRepository context)
+        private readonly EncoderService _encoder;
+        public UsersController(IUserRepository context, EncoderService encoder)
         {
             _userRepo = context;
+            _encoder = encoder;
         }
 
         // GET: api/Users
-        [HttpGet]
+        [HttpGet, Authorize(Roles = "Manager")]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
             try
@@ -82,6 +77,7 @@ namespace JobSeekerApi.Controllers
             }
             try
             {
+                user.Password = _encoder.HashPasword(user.Password);
                 return await _userRepo.CreateUser(user);
             }
             catch (Exception ex)

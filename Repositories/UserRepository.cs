@@ -55,10 +55,48 @@ public class UserRepository : IUserRepository
 
     public async Task<UserDTO> CreateUser(UserCreateDTO user)
     {
-        var query = "INSERT INTO users (name) VALUES (@Name) RETURNING *";
+        var query = @"INSERT INTO users (
+        name, 
+        user_type_id,
+        email,
+        password,
+        date_of_birth,
+        gender,
+        is_active,
+        contact_number,
+        sms_notification_active,
+        email_notification_active,
+        image
+        ) VALUES 
+        (
+            @Name,
+            @UserTypeId,
+            @Email,
+            @Password,
+            @DateOfBirth,
+            @Gender,
+            @IsActive,
+            @ContactNumber,
+            @SmsNotificationActive,
+            @EmailNotificationActive,
+            @Image
+        ) RETURNING *";
         using (var connection = _context.CreateConnection())
         {
-            return await connection.QueryFirstAsync<UserDTO>(query, new { Name = user.Name});
+            return await connection.QueryFirstAsync<UserDTO>(query, new
+            {
+                Name = user.Name,
+                UserTypeId = user.UserTypeId,
+                Email = user.Email,
+                Password = user.Password,
+                DateOfBirth = user.DateOfBirth,
+                Gender = user.Gender,
+                IsActive = false,
+                ContactNumber = user.ContactNumber,
+                SmsNotificationActive = user.SmsNotificationActive,
+                EmailNotificationActive = user.EmailNotificationActive,
+                Image = new byte[]{},
+            });
         }
     }
 }

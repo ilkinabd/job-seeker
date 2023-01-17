@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using JobSeekerApi.Models;
 using JobSeekerApi.Contexts;
 using JobSeekerApi.Contracts;
 using JobSeekerApi.Repositories;
@@ -7,6 +6,11 @@ using JobSeekerApi.Migrations;
 using JobSeekerApi.Extensions;
 using FluentMigrator.Runner;
 using System.Reflection;
+using JobSeekerApi.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -14,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<DapperContext>();
 builder.Services.AddSingleton<Database>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<EncoderService, EncoderService>();
 
 builder.Services.AddLogging(c => c.AddFluentMigratorConsole())
     .AddFluentMigratorCore()
@@ -21,6 +26,24 @@ builder.Services.AddLogging(c => c.AddFluentMigratorConsole())
         .WithGlobalConnectionString(builder.Configuration.GetConnectionString("SqlConnection"))
         .ScanIn(Assembly.GetExecutingAssembly()).For.Migrations());
 
+builder.Services.AddAuthentication(opt =>
+{
+    opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "https://localhost:5001",
+            ValidAudience = "https://localhost:5001",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("superSecretKey@345"))
+        };
+    });
 builder.Services.AddControllers();
 // builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = false); 
 
@@ -41,8 +64,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

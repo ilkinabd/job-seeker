@@ -9,6 +9,7 @@ public class DapperContext
     private readonly string? _masterConnectionString;
     public DapperContext(IConfiguration configuration)
     {
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
         _configuration = configuration;
         _connectionString = _configuration.GetConnectionString("SqlConnection");
         _masterConnectionString = _configuration.GetConnectionString("MasterSqlConnection");
