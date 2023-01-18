@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using JobSeekerApi.Contexts;
 using JobSeekerApi.Contracts;
 using JobSeekerApi.Repositories;
@@ -10,6 +9,8 @@ using JobSeekerApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.Http.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,8 +50,14 @@ builder.Services.AddControllers();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options => {
+    // options.SchemaGeneratorOptions.UseInlineDefinitionsForEnums = true;
+});
+builder.Services.Configure<JsonOptions>(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 
+});
 var app = builder.Build();
 
 

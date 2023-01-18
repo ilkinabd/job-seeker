@@ -19,11 +19,11 @@ namespace JobSeekerApi.Controllers
 
         // GET: api/Users
         [HttpGet, Authorize(Roles = "Manager")]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<User>>> GetUsers([FromQuery] UserParams parameters)
         {
             try
             {
-                var users = await _userRepo.GetUsers();
+                var users = await _userRepo.GetUsers(parameters);
                 return Ok(users);
             }
             catch (Exception ex)

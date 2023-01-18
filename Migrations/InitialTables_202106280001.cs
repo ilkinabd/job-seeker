@@ -25,6 +25,6 @@ public class InitialTables_202106280001 : Migration
             .WithColumn("image").AsBinary().NotNullable()
             .WithColumn("created_at").AsDateTime().WithDefaultValue("NOW()")
             .WithColumn("updated_at").AsDateTime().WithDefaultValue("NOW()")
-            .WithColumn("deleted_at").AsDateTime().WithDefaultValue("NOW()");
+            .WithColumn("deleted_at").AsDateTime().Nullable();
     }
 }

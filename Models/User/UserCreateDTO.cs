@@ -1,7 +1,6 @@
 namespace JobSeekerApi.Models;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
-
+using System.Text.Json.Serialization;
 public enum UserType
 {
     Seeker = 1,
@@ -9,7 +8,9 @@ public enum UserType
 }
 public class UserCreateDTO
 {
-    [EnumDataType(typeof(UserType),ErrorMessage = "User type id must be valid UserType enum")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    // [JsonPropertyName("user_type_id")]
+    [EnumDataType(typeof(UserType),ErrorMessage = "User type id must be valid UserType enum (Seeker = 1, Recruiter = 2)")]
     public UserType UserTypeId { get; set; }
     [Required]
     public string? Name { get; set; }

@@ -2,6 +2,7 @@ namespace JobSeekerApi.Repositories;
 using JobSeekerApi.Contracts;
 using JobSeekerApi.Contexts;
 using JobSeekerApi.Models;
+using DapperQueryBuilder;
 using Dapper;
 public class UserRepository : IUserRepository
 {
@@ -11,23 +12,48 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<User>> GetUsers()
+    public async Task<IEnumerable<User>> GetUsers(UserParams parameters)
     {
-        var query = "SELECT * FROM users";
         using (var connection = _context.CreateConnection())
         {
-            var users = await connection.QueryAsync<User>(query);
-            return users.ToList();
+            var query = connection.QueryBuilder($@"SELECT * FROM users /**where**/");
+
+            var filters = new Filters()
+            {
+                // new Filter($"deleted_at IS NULL")
+            };
+            if (parameters.Name != null)
+            {
+                var productVarcharParm = new DbString { 
+                    Value = $@"%{parameters.Name}%", 
+                    IsFixedLength = true, 
+                    Length = 50, 
+                    IsAnsi = true 
+                };
+
+                filters.Add(new Filter($@"name LIKE {productVarcharParm}"));
+            }
+
+            if (parameters.Email != null)
+            {
+                filters.Add(new Filter($"email LIKE %{parameters.Email}%"));
+            }
+
+            if (filters.Count() > 0)
+            {
+                query.Where(filters);
+            }
+            var list = query.Query<User>().ToList();
+
+            return list;
         }
     }
 
     public async Task<User> GetUser(long id)
     {
-        var parameters = new { ID = id };
-        var query = "SELECT id,email FROM users WHERE id = @Id";
         using (var connection = _context.CreateConnection())
         {
-            var user = await connection.QueryFirstAsync<User>(query, parameters);
+            var user = await connection.QueryBuilder($@"SELECT id, email, name, created_at FROM users WHERE id = {id}").QueryFirstAsync<User>();
             return user;
         }
     }
@@ -35,68 +61,51 @@ public class UserRepository : IUserRepository
 
     public async Task UpdateUser(long id, User user)
     {
-        var parameters = new { ID = id };
-        var query = "UPDATE users SET name = @Name WHERE id = @ID";
         using (var connection = _context.CreateConnection())
         {
-            await connection.ExecuteAsync(query, new { Name = user.Name, ID = id });
+            await connection.QueryBuilder($@"UPDATE users SET name = {user.Name} WHERE id = {id}").QueryAsync();
         }
     }
 
     public async Task DeleteUser(long id)
     {
-        var parameters = new { ID = id };
-        var query = "UPDATE users SET deleted_at = @DeletedAt WHERE id = @ID";
         using (var connection = _context.CreateConnection())
         {
-            await connection.ExecuteAsync(query, new { DeletedAt = "NOW()", ID = id });
+            await connection.QueryBuilder($@"UPDATE users SET deleted_at = NOW() WHERE id = {id}").ExecuteAsync();
         }
     }
 
     public async Task<UserDTO> CreateUser(UserCreateDTO user)
     {
-        var query = @"INSERT INTO users (
-        name, 
-        user_type_id,
-        email,
-        password,
-        date_of_birth,
-        gender,
-        is_active,
-        contact_number,
-        sms_notification_active,
-        email_notification_active,
-        image
-        ) VALUES 
-        (
-            @Name,
-            @UserTypeId,
-            @Email,
-            @Password,
-            @DateOfBirth,
-            @Gender,
-            @IsActive,
-            @ContactNumber,
-            @SmsNotificationActive,
-            @EmailNotificationActive,
-            @Image
-        ) RETURNING *";
         using (var connection = _context.CreateConnection())
         {
-            return await connection.QueryFirstAsync<UserDTO>(query, new
-            {
-                Name = user.Name,
-                UserTypeId = user.UserTypeId,
-                Email = user.Email,
-                Password = user.Password,
-                DateOfBirth = user.DateOfBirth,
-                Gender = user.Gender,
-                IsActive = false,
-                ContactNumber = user.ContactNumber,
-                SmsNotificationActive = user.SmsNotificationActive,
-                EmailNotificationActive = user.EmailNotificationActive,
-                Image = new byte[]{},
-            });
+            return await connection.QueryBuilder($@"
+            INSERT INTO users (
+                name, 
+                user_type_id,
+                email,
+                password,
+                date_of_birth,
+                gender,
+                is_active,
+                contact_number,
+                sms_notification_active,
+                email_notification_active,
+                image
+            ) VALUES 
+            (   
+                {user.Name},
+                {user.UserTypeId},
+                {user.Email},
+                {user.Password},
+                {user.DateOfBirth},
+                {user.Gender},
+                {false},
+                {user.ContactNumber},
+                {user.SmsNotificationActive},
+                {user.EmailNotificationActive},
+                {new byte[] { }}
+            ) RETURNING *").QueryFirstAsync<UserDTO>();
         }
     }
 }

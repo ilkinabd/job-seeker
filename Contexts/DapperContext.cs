@@ -13,6 +13,8 @@ public class DapperContext
         _configuration = configuration;
         _connectionString = _configuration.GetConnectionString("SqlConnection");
         _masterConnectionString = _configuration.GetConnectionString("MasterSqlConnection");
+        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+        NpgsqlLoggingConfiguration.InitializeLogging(loggerFactory);
     }
     public NpgsqlConnection CreateConnection()
         => new NpgsqlConnection(_connectionString);

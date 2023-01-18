@@ -3,7 +3,7 @@ namespace JobSeekerApi.Contracts;
 using JobSeekerApi.Models;
 public interface IUserRepository
 {
-    public Task<IEnumerable<User>> GetUsers();
+    public Task<IEnumerable<User>> GetUsers(UserParams parameters);
 
     public Task<User> GetUser(long id);
 
